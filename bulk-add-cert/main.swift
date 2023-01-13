@@ -9,7 +9,7 @@ import Foundation
 import Security
 import Cocoa
 
-print("We will attempt to add some certificate(s)... let's go!")
+print("We will attempt to add a certificate to the keychain... let's go!")
 
 // we will need to convert .key to .der
 // e.g.
@@ -18,8 +18,6 @@ print("We will attempt to add some certificate(s)... let's go!")
 
  ```sh
  openssl x509 -in /Users/nicoverbruggen/.config/valet/CA/LaravelValetCASelfSigned.pem -out /Users/nicoverbruggen/.config/valet/CA/LaravelValetCASelfSigned.der -outform DER
-
- openssl x509 -in /Users/nicoverbruggen/.config/valet/Certificates/nicoverbruggen.test.crt -out /Users/nicoverbruggen/.config/valet/Certificates/nicoverbruggen.test.der -outform DER
 
  As per: https://developer.apple.com/forums/thread/68789
  ```
@@ -34,8 +32,11 @@ func addCertificateWithPath(path: String) {
 
     let certificate = SecCertificateCreateWithData(nil, data)
 
+    // TODO: Check if the certificate already exists
+
     let addQuery: [String: Any] = [kSecClass as String: kSecClassCertificate,
-                                   kSecValueRef as String: certificate!]
+                                   kSecValueRef as String: certificate!,
+                                   kSecAttrLabel as String: "Valet Certificate"]
 
     let status = SecItemAdd(addQuery as CFDictionary, nil)
 
@@ -48,14 +49,11 @@ func addCertificateWithPath(path: String) {
 
     guard outcome == errSecSuccess else {
         print("Could not add to admin trust.")
-        print(SecCopyErrorMessageString(outcome, nil))
+        print(SecCopyErrorMessageString(outcome, nil) ?? "No error provided.")
         exit(1)
     }
 
     print("Certificate for path \(path) has been added!")
 }
 
-// addCertificateWithPath(path: "/Users/nicoverbruggen/.config/valet/CA/LaravelValetCASelfSigned.der")
-addCertificateWithPath(path: "/Users/nicoverbruggen/.config/valet/Certificates/nicoverbruggen.test.der")
-
-
+addCertificateWithPath(path: "/Users/nicoverbruggen/.config/valet/CA/LaravelValetCASelfSigned.der")
